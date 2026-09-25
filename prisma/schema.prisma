@@ -1,0 +1,335 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum UserRole {
+  ADMIN
+  LOAN_OFFICER
+  CUSTOMER
+  TEAM_LEADER
+}
+
+enum UserStatus {
+  ACTIVE
+  INACTIVE
+}
+
+enum KycStatus {
+  PENDING
+  VERIFIED
+  REJECTED
+}
+
+enum GroupStatus {
+  ACTIVE
+  INACTIVE
+}
+
+enum MemberStatus {
+  ACTIVE
+  INACTIVE
+}
+
+enum LoanType {
+  INDIVIDUAL
+  GROUP
+}
+
+enum LoanProductStatus {
+  ACTIVE
+  INACTIVE
+}
+
+enum ApplicationStatus {
+  PENDING
+  UNDER_REVIEW
+  APPROVED
+  REJECTED
+}
+
+enum LoanStatus {
+  PENDING
+  ACTIVE
+  COMPLETED
+  OVERDUE
+  REJECTED
+}
+
+enum EmiStatus {
+  PENDING
+  PAID
+  PARTIALLY_PAID
+  OVERDUE
+}
+
+enum PaymentMethod {
+  CASH
+  BANK_TRANSFER
+  UPI
+  ONLINE
+}
+
+enum DocumentStatus {
+  PENDING
+  VERIFIED
+  REJECTED
+}
+
+model User {
+  id            String       @id @default(cuid())
+  name          String
+  email         String       @unique
+  phone         String?      @unique
+  password      String
+  role          UserRole     @default(CUSTOMER)
+  status        UserStatus   @default(ACTIVE)
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+
+  customer      Customer?
+  employee      Employee?
+  notifications Notification[]
+  auditLogs     AuditLog[]
+
+  createdGroups Group[]       @relation("GroupCreatedBy")
+  reviewedApplications LoanApplication[] @relation("ApplicationReviewedBy")
+  recordedRepayments Repayment[] @relation("RepaymentRecordedBy")
+}
+
+model Customer {
+  id            String      @id @default(cuid())
+  userId        String      @unique
+  fullName      String
+  dateOfBirth   DateTime?
+  gender        String?
+  phone         String?
+  email         String?
+  address       String?
+  occupation    String?
+  monthlyIncome Decimal?    @db.Decimal(12, 2)
+  aadhaarNumber String?
+  panNumber     String?
+  bankName      String?
+  accountHolder String?
+  accountNumber String?
+  ifsc          String?
+  kycStatus     KycStatus   @default(PENDING)
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+
+  user          User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  groupMembers  GroupMember[]
+  teamLeaderOf  Group[]          @relation("TeamLeader")
+  applications  LoanApplication[]
+  loans         Loan[]
+  documents     Document[]
+}
+
+model Employee {
+  id           String     @id @default(cuid())
+  userId       String     @unique
+  employeeCode String     @unique
+  designation  String?
+  joiningDate  DateTime?
+  status       UserStatus @default(ACTIVE)
+
+  user         User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Group {
+  id           String      @id @default(cuid())
+  name         String
+  teamLeaderId String
+  createdById  String
+  status       GroupStatus @default(ACTIVE)
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+
+  teamLeader   Customer     @relation("TeamLeader", fields: [teamLeaderId], references: [id])
+  createdBy    User         @relation("GroupCreatedBy", fields: [createdById], references: [id])
+  members      GroupMember[]
+  loans        Loan[]
+  loanApplications LoanApplication[]
+
+  @@index([teamLeaderId])
+  @@index([createdById])
+}
+
+model GroupMember {
+  id         String       @id @default(cuid())
+  groupId    String
+  customerId String
+  joinedAt   DateTime     @default(now())
+  status     MemberStatus @default(ACTIVE)
+
+  group      Group    @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  customer   Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+
+  @@unique([groupId, customerId])
+  @@index([customerId])
+}
+
+model LoanProduct {
+  id           String             @id @default(cuid())
+  name         String
+  loanType     LoanType
+  interestRate Decimal            @db.Decimal(5, 2)
+  minAmount    Decimal            @db.Decimal(12, 2)
+  maxAmount    Decimal            @db.Decimal(12, 2)
+  minTenure    Int
+  maxTenure    Int
+  status       LoanProductStatus  @default(ACTIVE)
+  createdAt    DateTime           @default(now())
+  updatedAt    DateTime           @updatedAt
+
+  applications LoanApplication[]
+  loans        Loan[]
+}
+
+model LoanApplication {
+  id             String            @id @default(cuid())
+  customerId     String
+  loanProductId  String
+  groupId        String?
+  requestedAmount Decimal          @db.Decimal(12, 2)
+  requestedTenure Int
+  purpose        String?
+  status         ApplicationStatus @default(PENDING)
+  reviewedById   String?
+  reviewedAt     DateTime?
+  remarks        String?
+  createdAt      DateTime          @default(now())
+  updatedAt      DateTime          @updatedAt
+
+  customer       Customer     @relation(fields: [customerId], references: [id])
+  loanProduct    LoanProduct  @relation(fields: [loanProductId], references: [id])
+  group          Group?       @relation(fields: [groupId], references: [id])
+  reviewedBy     User?        @relation("ApplicationReviewedBy", fields: [reviewedById], references: [id])
+  loan           Loan?
+
+  @@index([customerId])
+  @@index([loanProductId])
+  @@index([groupId])
+  @@index([status])
+}
+
+model Loan {
+  id               String     @id @default(cuid())
+  customerId       String
+  applicationId    String     @unique
+  loanProductId    String
+  groupId          String?
+  principalAmount  Decimal    @db.Decimal(12, 2)
+  interestRate     Decimal    @db.Decimal(5, 2)
+  tenure           Int
+  emiAmount        Decimal    @db.Decimal(12, 2)
+  startDate        DateTime?
+  endDate          DateTime?
+  outstandingAmount Decimal   @db.Decimal(12, 2)
+  status           LoanStatus @default(PENDING)
+  createdAt        DateTime   @default(now())
+  updatedAt        DateTime   @updatedAt
+
+  customer         Customer       @relation(fields: [customerId], references: [id])
+  application      LoanApplication @relation(fields: [applicationId], references: [id])
+  loanProduct      LoanProduct    @relation(fields: [loanProductId], references: [id])
+  group            Group?         @relation(fields: [groupId], references: [id])
+  emiSchedules     EmiSchedule[]
+  repayments       Repayment[]
+
+  @@index([customerId])
+  @@index([loanProductId])
+  @@index([groupId])
+  @@index([status])
+}
+
+model EmiSchedule {
+  id                String    @id @default(cuid())
+  loanId            String
+  installmentNumber Int
+  dueDate           DateTime
+  amountDue         Decimal   @db.Decimal(12, 2)
+  amountPaid        Decimal   @default(0) @db.Decimal(12, 2)
+  status            EmiStatus @default(PENDING)
+  paidDate          DateTime?
+
+  loan              Loan       @relation(fields: [loanId], references: [id], onDelete: Cascade)
+  repayments        Repayment[]
+
+  @@unique([loanId, installmentNumber])
+  @@index([loanId])
+  @@index([status])
+}
+
+model Repayment {
+  id                   String        @id @default(cuid())
+  loanId               String
+  emiId                String?
+  amount               Decimal       @db.Decimal(12, 2)
+  paymentDate         DateTime      @default(now())
+  paymentMethod       PaymentMethod
+  transactionReference String?
+  recordedById         String
+  remarks              String?
+
+  loan        Loan        @relation(fields: [loanId], references: [id])
+  emi         EmiSchedule? @relation(fields: [emiId], references: [id])
+  recordedBy  User        @relation("RepaymentRecordedBy", fields: [recordedById], references: [id])
+
+  @@index([loanId])
+  @@index([emiId])
+  @@index([recordedById])
+}
+
+model Document {
+  id         String         @id @default(cuid())
+  customerId String
+  type       String
+  fileUrl    String
+  status     DocumentStatus @default(PENDING)
+  createdAt  DateTime       @default(now())
+
+  customer Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+
+  @@index([customerId])
+}
+
+model Notification {
+  id         String   @id @default(cuid())
+  userId     String
+  title      String
+  message    String
+  readStatus Boolean  @default(false)
+  createdAt  DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model Setting {
+  id        String   @id @default(cuid())
+  key       String   @unique
+  value     String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model AuditLog {
+  id         String   @id @default(cuid())
+  userId     String
+  action     String
+  entityType String
+  entityId   String?
+  details    String?
+  timestamp  DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([entityType, entityId])
+}
