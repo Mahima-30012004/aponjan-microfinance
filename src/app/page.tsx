@@ -2,90 +2,96 @@ import Link from "next/link";
 
 export default function Home() {
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col justify-between">
-      {/* Navigation Bar */}
-      <header className="border-b bg-white shadow-sm">
-        <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
-          <div className="flex items-center space-x-2">
-            <span className="text-2xl font-bold tracking-tight text-blue-700">Aponjan</span>
-            <span className="text-xs uppercase tracking-widest text-slate-500 font-semibold border-l pl-2 border-slate-300">
-              Microfinance
-            </span>
-          </div>
-          <div className="flex items-center gap-3">
-            <Link
-              href="/login"
-              className="text-sm font-medium text-slate-700 hover:text-blue-600 px-3 py-2 transition"
-            >
-              Sign In
-            </Link>
-            <Link
-              href="/register"
-              className="text-sm font-medium bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition shadow-sm"
-            >
-              Apply Now
-            </Link>
-          </div>
+    <div className="min-h-screen bg-[#ecfdf5] text-slate-800 flex flex-col font-sans">
+      {/* Navbar */}
+      <header className="max-w-7xl w-full mx-auto px-6 py-6 flex items-center justify-between">
+        <div className="text-2xl font-bold tracking-tight text-[#065f46]">
+          Aponjan
+        </div>
+
+        <nav className="hidden md:flex items-center gap-8 text-sm font-medium text-slate-600">
+          <Link href="/" className="hover:text-[#065f46] transition">Home</Link>
+          <Link href="#loans" className="hover:text-[#065f46] transition">Loans</Link>
+          <Link href="#how-it-works" className="hover:text-[#065f46] transition">How It Works</Link>
+          <Link href="#about" className="hover:text-[#065f46] transition">About Us</Link>
+          <Link href="#contact" className="hover:text-[#065f46] transition">Contact</Link>
+        </nav>
+
+        <div className="flex items-center gap-3">
+          <Link
+            href="/login"
+            className="px-5 py-2 text-sm font-medium border border-[#047857] text-[#047857] rounded-lg hover:bg-white transition bg-transparent"
+          >
+            Login
+          </Link>
+          <Link
+            href="/register"
+            className="px-5 py-2 text-sm font-medium bg-[#047857] text-white rounded-lg hover:bg-[#065f46] transition shadow-sm"
+          >
+            Register
+          </Link>
         </div>
       </header>
 
       {/* Hero Section */}
-      <main className="flex-1 max-w-5xl mx-auto px-6 py-16 flex flex-col items-center text-center">
-        <div className="inline-block bg-blue-50 text-blue-700 text-xs font-semibold uppercase tracking-wider px-3 py-1 rounded-full mb-6 border border-blue-100">
-          Empowering Communities & Micro-Enterprises
-        </div>
-        <h1 className="text-4xl sm:text-5xl font-extrabold text-slate-900 tracking-tight leading-tight max-w-3xl">
-          Transparent, Accessible & Trusted Micro-Credit Solutions
-        </h1>
-        <p className="mt-4 text-base sm:text-lg text-slate-600 max-w-2xl">
-          Quick approvals, clear repayment schedules, and dedicated support for local entrepreneurs, self-help groups, and micro-enterprises.
-        </p>
-
-        {/* Action Buttons */}
-        <div className="mt-8 flex flex-col sm:flex-row gap-4 w-full sm:w-auto">
-          <Link
-            href="/register"
-            className="w-full sm:w-auto text-center font-medium bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-lg shadow transition"
-          >
-            Create Customer Account
-          </Link>
-          <Link
-            href="/login"
-            className="w-full sm:w-auto text-center font-medium bg-white hover:bg-slate-100 text-slate-800 border border-slate-300 px-8 py-3 rounded-lg transition"
-          >
-            Member / Staff Portal
-          </Link>
-        </div>
-
-        {/* Feature Highlights */}
-        <div className="mt-16 grid grid-cols-1 sm:grid-cols-3 gap-6 text-left w-full">
-          <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
-            <h3 className="font-semibold text-slate-900 mb-1">Fast Loan Processing</h3>
-            <p className="text-sm text-slate-600">
-              Apply online with standard documentation and track sanction status in real time.
-            </p>
+      <main className="flex-1 max-w-7xl w-full mx-auto px-6 py-12 lg:py-20 flex flex-col lg:flex-row items-center justify-between gap-12">
+        {/* Left Content */}
+        <div className="flex-1 max-w-2xl">
+          <div className="text-xs font-bold tracking-widest text-[#047857] uppercase mb-4">
+            Simple • Transparent • Accessible
           </div>
-          <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
-            <h3 className="font-semibold text-slate-900 mb-1">Clear EMI Schedules</h3>
-            <p className="text-sm text-slate-600">
-              Transparent breakdown of principal, interest, and monthly installments with zero hidden fees.
-            </p>
+          <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-[#0f172a] tracking-tight leading-tight mb-6">
+            Financial support <br />
+            for your <span className="text-[#059669]">next step.</span>
+          </h1>
+          <p className="text-base sm:text-lg text-slate-600 leading-relaxed mb-8 max-w-xl">
+            Aponjan provides simple and structured microfinance solutions designed
+            to help individuals and groups manage their financial needs with confidence.
+          </p>
+
+          <div className="flex flex-wrap items-center gap-4">
+            <Link
+              href="/dashboard/apply-loan"
+              className="px-6 py-3.5 bg-[#047857] hover:bg-[#065f46] text-white font-medium rounded-lg shadow-sm transition"
+            >
+              Apply for a Loan
+            </Link>
+            <Link
+              href="/login"
+              className="px-6 py-3.5 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 font-medium rounded-lg shadow-sm transition"
+            >
+              Customer Login
+            </Link>
           </div>
-          <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
-            <h3 className="font-semibold text-slate-900 mb-1">Dedicated Administration</h3>
-            <p className="text-sm text-slate-600">
-              Secure role-based dashboard for verification officers and internal management.
+        </div>
+
+        {/* Right Green Card */}
+        <div className="flex-1 w-full max-w-md lg:max-w-lg">
+          <div className="bg-[#059669] text-white rounded-3xl p-8 sm:p-10 shadow-xl border border-emerald-500/20">
+            <div className="text-sm font-medium text-emerald-100 mb-2">
+              Aponjan Microfinance
+            </div>
+            <h2 className="text-2xl sm:text-3xl font-bold tracking-tight mb-4">
+              Manage your loan with clarity.
+            </h2>
+            <p className="text-sm text-emerald-50/90 leading-relaxed mb-8">
+              Apply, track your loan, view your repayment schedule and stay
+              informed about your payments from one place.
             </p>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="bg-[#047857] p-4 rounded-xl border border-emerald-500/30">
+                <div className="font-semibold text-base mb-1">Individual</div>
+                <div className="text-xs text-emerald-200">Loan option</div>
+              </div>
+              <div className="bg-[#047857] p-4 rounded-xl border border-emerald-500/30">
+                <div className="font-semibold text-base mb-1">Group</div>
+                <div className="text-xs text-emerald-200">Loan option</div>
+              </div>
+            </div>
           </div>
         </div>
       </main>
-
-      {/* Footer */}
-      <footer className="border-t bg-white py-6">
-        <div className="max-w-6xl mx-auto px-6 text-center text-xs text-slate-500">
-          © {new Date().getFullYear()} Aponjan Microfinance. All rights reserved. For authorized members and staff.
-        </div>
-      </footer>
     </div>
   );
 }
