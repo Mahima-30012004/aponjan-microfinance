@@ -1,5 +1,6 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
 type Loan = {
@@ -27,6 +28,7 @@ type Application = {
 };
 
 export default function MyLoansPage() {
+  const router = useRouter();
   const [applications, setApplications] = useState<Application[]>([]);
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState("");
@@ -36,7 +38,7 @@ export default function MyLoansPage() {
       const token = localStorage.getItem("token");
 
       if (!token) {
-        window.location.href = "/login";
+        router.push("/login");
         return;
       }
 
@@ -63,8 +65,8 @@ export default function MyLoansPage() {
       }
     };
 
-    fetchApplications();
-  }, []);
+    void fetchApplications();
+  }, [router]);
 
   if (loading) {
     return (
@@ -97,7 +99,7 @@ export default function MyLoansPage() {
           </h2>
 
           <p className="mt-2 text-gray-600">
-            You haven't submitted any loan applications yet.
+            You haven&apos;t submitted any loan applications yet.
           </p>
         </div>
       ) : (
@@ -238,9 +240,7 @@ export default function MyLoansPage() {
 
                   {/* EMI button */}
                   <button
-                    onClick={() =>
-                      (window.location.href = `/dashboard/loans/${application.loan?.id}/emi`)
-                    }
+                    onClick={() => router.push(`/dashboard/loans/${application.loan?.id}/emi`)}
                     className="mt-6 rounded-lg bg-black px-5 py-2 text-white hover:bg-gray-800"
                   >
                     View EMI Schedule

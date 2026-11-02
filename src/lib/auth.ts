@@ -1,4 +1,5 @@
 import jwt from "jsonwebtoken";
+import { getRequiredServerEnv } from "@/lib/env";
 
 export type AuthUser = {
   userId: string;
@@ -8,11 +9,7 @@ export type AuthUser = {
 
 export function verifyToken(token: string): AuthUser | null {
   try {
-    const jwtSecret = process.env.JWT_SECRET;
-
-    if (!jwtSecret) {
-      throw new Error("JWT_SECRET is not configured");
-    }
+    const jwtSecret = getRequiredServerEnv("JWT_SECRET");
 
     const decoded = jwt.verify(token, jwtSecret);
 

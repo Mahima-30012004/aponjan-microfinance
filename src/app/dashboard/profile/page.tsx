@@ -1,5 +1,6 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
 type User = {
@@ -11,6 +12,7 @@ type User = {
 };
 
 export default function ProfilePage() {
+  const router = useRouter();
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -19,7 +21,7 @@ export default function ProfilePage() {
       const token = localStorage.getItem("token");
 
       if (!token) {
-        window.location.href = "/login";
+        router.push("/login");
         return;
       }
 
@@ -34,7 +36,7 @@ export default function ProfilePage() {
 
         if (!response.ok) {
           localStorage.removeItem("token");
-          window.location.href = "/login";
+          router.push("/login");
           return;
         }
 
@@ -46,8 +48,8 @@ export default function ProfilePage() {
       }
     };
 
-    fetchProfile();
-  }, []);
+    void fetchProfile();
+  }, [router]);
 
   if (loading) {
     return (

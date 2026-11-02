@@ -338,7 +338,7 @@ export default function Home() {
           <h2 className="text-xl font-bold">Contact Aponjan</h2>
 
           <p className="mt-2 text-gray-600">
-            Contact information will be added once the company's official
+            Contact information will be added once the company&apos;s official
             details are provided.
           </p>
         </div>

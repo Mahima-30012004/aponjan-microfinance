@@ -2,8 +2,27 @@
 
 import { useEffect, useState } from "react";
 
+type Customer = {
+  fullName?: string;
+};
+
+type LoanProduct = {
+  name?: string;
+  loanType?: string;
+};
+
+type Application = {
+  id: string;
+  customer?: Customer | null;
+  loanProduct?: LoanProduct | null;
+  requestedAmount: number | string;
+  requestedTenure: number;
+  purpose?: string | null;
+  status: string;
+};
+
 export default function AdminApplicationsPage() {
-  const [applications, setApplications] = useState<any[]>([]);
+  const [applications, setApplications] = useState<Application[]>([]);
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState("");
 
@@ -42,7 +61,11 @@ export default function AdminApplicationsPage() {
   };
 
   useEffect(() => {
-    fetchApplications();
+    const loadApplications = async () => {
+      await fetchApplications();
+    };
+
+    void loadApplications();
   }, []);
 
   const updateApplication = async (

@@ -1,8 +1,10 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { FormEvent, useState } from "react";
 
 export default function LoginPage() {
+  const router = useRouter();
   const [form, setForm] = useState({
     email: "",
     password: "",
@@ -36,10 +38,10 @@ export default function LoginPage() {
       localStorage.setItem("token", data.token);
 
       if (data.user.role === "ADMIN") {
-         localStorage.setItem("adminToken", data.token);
+        localStorage.setItem("adminToken", data.token);
       }
 
-      setMessage("Login successful!");
+      router.push(data.user.role === "ADMIN" ? "/admin/applications" : "/dashboard");
     } catch (error) {
       console.error(error);
       setMessage("Something went wrong. Please try again.");

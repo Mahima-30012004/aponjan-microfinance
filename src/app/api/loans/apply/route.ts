@@ -1,10 +1,10 @@
 import { prisma } from "@/lib/prisma";
 import { verifyToken } from "@/lib/auth";
+import { normalizePurpose, parsePositiveNumber, parseWholeNumber } from "@/lib/validation";
 import { NextResponse } from "next/server";
 
 export async function POST(request: Request) {
   try {
-    // Check login token
     const authHeader = request.headers.get("authorization");
 
     if (!authHeader || !authHeader.startsWith("Bearer ")) {
@@ -30,11 +30,7 @@ export async function POST(request: Request) {
       );
     }
 
-    // Only customers can apply
-    if (
-      authUser.role !== "CUSTOMER" &&
-      authUser.role !== "TEAM_LEADER"
-    ) {
+    if (authUser.role !== "CUSTOMER" && authUser.role !== "TEAM_LEADER") {
       return NextResponse.json(
         {
           success: false,
@@ -45,13 +41,10 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json();
-
-    const {
-      loanType,
-      amount,
-      tenure,
-      purpose,
-    } = body;
+    const loanType = body?.loanType;
+    const amount = parsePositiveNumber(body?.amount);
+    const tenure = parseWholeNumber(body?.tenure);
+    const purpose = normalizePurpose(body?.purpose);
 
     if (!loanType || !amount || !tenure) {
       return NextResponse.json(
@@ -63,7 +56,16 @@ export async function POST(request: Request) {
       );
     }
 
-    // Find customer
+    if (loanType !== "INDIVIDUAL" && loanType !== "GROUP") {
+      return NextResponse.json(
+        {
+          success: false,
+          message: "Loan type must be either INDIVIDUAL or GROUP",
+        },
+        { status: 400 }
+      );
+    }
+
     const customer = await prisma.customer.findUnique({
       where: {
         userId: authUser.userId,
@@ -80,32 +82,29 @@ export async function POST(request: Request) {
       );
     }
 
-    // Find active loan product
     const loanProduct = await prisma.loanProduct.findFirst({
-  where: {
-    loanType,
-    name: "Aponjan Individual Loan",
-    status: "ACTIVE",
-  },
-});
+      where: {
+        loanType,
+        status: "ACTIVE",
+      },
+      orderBy: {
+        createdAt: "asc",
+      },
+    });
 
     if (!loanProduct) {
       return NextResponse.json(
         {
           success: false,
-          message: "No active loan product available",
+          message: `No active ${loanType.toLowerCase()} loan product available`,
         },
         { status: 404 }
       );
     }
 
-    const requestedAmount = Number(amount);
-    const requestedTenure = Number(tenure);
-
-    // Validate amount
     if (
-      requestedAmount < Number(loanProduct.minAmount) ||
-      requestedAmount > Number(loanProduct.maxAmount)
+      amount < Number(loanProduct.minAmount) ||
+      amount > Number(loanProduct.maxAmount)
     ) {
       return NextResponse.json(
         {
@@ -116,27 +115,25 @@ export async function POST(request: Request) {
       );
     }
 
-    // Validate tenure
     if (
-      requestedTenure < loanProduct.minTenure ||
-      requestedTenure > loanProduct.maxTenure
+      tenure < loanProduct.minTenure ||
+      tenure > loanProduct.maxTenure
     ) {
       return NextResponse.json(
         {
           success: false,
-          message: `Tenure must be between ${loanProduct.minTenure} and ${loanProduct.maxTenure} months`,
+          message: `Tenure must be between ${loanProduct.minTenure} and ${loanProduct.maxTenure} weeks`,
         },
         { status: 400 }
       );
     }
 
-    // Create application
     const application = await prisma.loanApplication.create({
       data: {
         customerId: customer.id,
         loanProductId: loanProduct.id,
-        requestedAmount,
-        requestedTenure,
+        requestedAmount: amount,
+        requestedTenure: tenure,
         purpose: purpose || null,
         status: "PENDING",
       },

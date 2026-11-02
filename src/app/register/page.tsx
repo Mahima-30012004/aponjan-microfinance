@@ -1,8 +1,10 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { FormEvent, useState } from "react";
 
 export default function RegisterPage() {
+  const router = useRouter();
   const [form, setForm] = useState({
     name: "",
     email: "",
@@ -35,7 +37,7 @@ export default function RegisterPage() {
         return;
       }
 
-      setMessage("Registration successful! You can now login.");
+      setMessage("Registration successful! Redirecting to login...");
 
       setForm({
         name: "",
@@ -43,6 +45,10 @@ export default function RegisterPage() {
         phone: "",
         password: "",
       });
+
+      setTimeout(() => {
+        router.push("/login");
+      }, 500);
     } catch (error) {
       console.error(error);
       setMessage("Something went wrong. Please try again.");

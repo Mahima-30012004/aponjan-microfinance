@@ -1,5 +1,6 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
 type Emi = {
@@ -27,6 +28,7 @@ export default function EmiSchedulePage({
 }: {
   params: Promise<{ id: string }>;
 }) {
+  const router = useRouter();
   const [loan, setLoan] = useState<Loan | null>(null);
   const [emis, setEmis] = useState<Emi[]>([]);
   const [loading, setLoading] = useState(true);
@@ -37,7 +39,7 @@ export default function EmiSchedulePage({
       const token = localStorage.getItem("token");
 
       if (!token) {
-        window.location.href = "/login";
+        router.push("/login");
         return;
       }
 
@@ -67,8 +69,8 @@ export default function EmiSchedulePage({
       }
     };
 
-    fetchEmiSchedule();
-  }, [params]);
+    void fetchEmiSchedule();
+  }, [params, router]);
 
   if (loading) {
     return (
@@ -102,7 +104,7 @@ export default function EmiSchedulePage({
         </div>
 
         <button
-          onClick={() => (window.location.href = "/dashboard/loans")}
+          onClick={() => router.push("/dashboard/loans")}
           className="rounded-lg border px-4 py-2 text-sm font-medium hover:bg-gray-50"
         >
           Back to My Loans

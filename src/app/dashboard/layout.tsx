@@ -50,40 +50,6 @@ export default function DashboardLayout({
               My Loans
             </Link>
 
-            <Link
-              href="/dashboard/emi"
-              className="block rounded-lg px-4 py-3 hover:bg-gray-100"
-            >
-              EMI Schedule
-            </Link>
-
-            <Link
-              href="/dashboard/payments"
-              className="block rounded-lg px-4 py-3 hover:bg-gray-100"
-            >
-              Payments
-            </Link>
-
-            <Link
-              href="/dashboard/documents"
-              className="block rounded-lg px-4 py-3 hover:bg-gray-100"
-            >
-              Documents
-            </Link>
-
-            <Link
-              href="/dashboard/notifications"
-              className="block rounded-lg px-4 py-3 hover:bg-gray-100"
-            >
-              Notifications
-            </Link>
-
-            <Link
-              href="/dashboard/support"
-              className="block rounded-lg px-4 py-3 hover:bg-gray-100"
-            >
-              Support
-            </Link>
           </div>
 
           <div className="mt-8 border-t pt-4">

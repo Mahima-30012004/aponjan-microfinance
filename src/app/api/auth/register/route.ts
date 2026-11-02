@@ -1,4 +1,10 @@
 import { prisma } from "@/lib/prisma";
+import {
+  isValidPassword,
+  normalizeEmail,
+  normalizeName,
+  normalizePhone,
+} from "@/lib/validation";
 import bcrypt from "bcryptjs";
 import { NextResponse } from "next/server";
 
@@ -6,25 +12,22 @@ export async function POST(request: Request) {
   try {
     const body = await request.json();
 
-    const {
-      name,
-      email,
-      password,
-      phone,
-    } = body;
+    const name = normalizeName(body?.name);
+    const email = normalizeEmail(body?.email);
+    const phone = normalizePhone(body?.phone);
+    const password = typeof body?.password === "string" ? body.password.trim() : "";
 
-    // Check required fields
-    if (!name || !email || !password || !phone) {
+    if (!name || !email || !phone || !isValidPassword(password)) {
       return NextResponse.json(
         {
           success: false,
-          message: "Name, email, password and phone are required",
+          message:
+            "Name, valid email, valid phone number, and a password with at least 8 characters including a letter and number are required",
         },
         { status: 400 }
       );
     }
 
-    // Check if email already exists
     const existingUser = await prisma.user.findUnique({
       where: {
         email,
@@ -41,10 +44,8 @@ export async function POST(request: Request) {
       );
     }
 
-    // Hash password
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // Create user
     const user = await prisma.user.create({
       data: {
         name,
@@ -52,10 +53,11 @@ export async function POST(request: Request) {
         password: hashedPassword,
         role: "CUSTOMER",
         status: "ACTIVE",
+        phone,
         customer: {
           create: {
             fullName: name,
-            phone: phone,
+            phone,
           },
         },
       },

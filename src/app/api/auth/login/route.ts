@@ -1,4 +1,6 @@
 import { prisma } from "@/lib/prisma";
+import { getRequiredServerEnv } from "@/lib/env";
+import { normalizeEmail } from "@/lib/validation";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { NextResponse } from "next/server";
@@ -7,9 +9,9 @@ export async function POST(request: Request) {
   try {
     const body = await request.json();
 
-    const { email, password } = body;
+    const email = normalizeEmail(body?.email);
+    const password = typeof body?.password === "string" ? body.password.trim() : "";
 
-    // Check required fields
     if (!email || !password) {
       return NextResponse.json(
         {
@@ -20,7 +22,6 @@ export async function POST(request: Request) {
       );
     }
 
-    // Find user
     const user = await prisma.user.findUnique({
       where: {
         email,
@@ -41,7 +42,6 @@ export async function POST(request: Request) {
       );
     }
 
-    // Check account status
     if (user.status !== "ACTIVE") {
       return NextResponse.json(
         {
@@ -52,11 +52,7 @@ export async function POST(request: Request) {
       );
     }
 
-    // Compare password
-    const passwordMatch = await bcrypt.compare(
-      password,
-      user.password
-    );
+    const passwordMatch = await bcrypt.compare(password, user.password);
 
     if (!passwordMatch) {
       return NextResponse.json(
@@ -68,14 +64,8 @@ export async function POST(request: Request) {
       );
     }
 
-    // Check JWT secret
-    const jwtSecret = process.env.JWT_SECRET;
+    const jwtSecret = getRequiredServerEnv("JWT_SECRET");
 
-    if (!jwtSecret) {
-      throw new Error("JWT_SECRET is not configured");
-    }
-
-    // Create JWT token
     const token = jwt.sign(
       {
         userId: user.id,

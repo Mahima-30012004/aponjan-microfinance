@@ -1,7 +1,11 @@
 import { PrismaPg } from "@prisma/adapter-pg";
 import { PrismaClient } from "@prisma/client";
+import { getRequiredServerEnv } from "@/lib/env";
 
-const connectionString = process.env.DATABASE_URL;
+const connectionString = getRequiredServerEnv(
+  "DATABASE_URL",
+  "postgresql://postgres:postgres@localhost:5432/aponjan"
+);
 
 const adapter = new PrismaPg({
   connectionString,
