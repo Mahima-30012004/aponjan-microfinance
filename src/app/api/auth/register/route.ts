@@ -10,12 +10,30 @@ import { NextResponse } from "next/server";
 
 export async function POST(request: Request) {
   try {
-    const body = await request.json();
+    let body: Record<string, unknown>;
 
-    const name = normalizeName(body?.name);
-    const email = normalizeEmail(body?.email);
-    const phone = normalizePhone(body?.phone);
-    const password = typeof body?.password === "string" ? body.password.trim() : "";
+    try {
+      const payload: unknown = await request.json();
+
+      if (typeof payload !== "object" || payload === null || Array.isArray(payload)) {
+        return NextResponse.json(
+          { success: false, message: "Invalid registration request" },
+          { status: 400 }
+        );
+      }
+
+      body = payload as Record<string, unknown>;
+    } catch {
+      return NextResponse.json(
+        { success: false, message: "Request body must be valid JSON" },
+        { status: 400 }
+      );
+    }
+
+    const name = normalizeName(body.name);
+    const email = normalizeEmail(body.email);
+    const phone = normalizePhone(body.phone);
+    const password = typeof body.password === "string" ? body.password.trim() : "";
 
     if (!name || !email || !phone || !isValidPassword(password)) {
       return NextResponse.json(
@@ -82,12 +100,37 @@ export async function POST(request: Request) {
   } catch (error) {
     console.error("Registration error:", error);
 
+    const errorCode =
+      typeof error === "object" &&
+      error !== null &&
+      "code" in error &&
+      typeof error.code === "string"
+        ? error.code
+        : null;
+
+    if (errorCode === "P2002") {
+      return NextResponse.json(
+        {
+          success: false,
+          message: "An account with this email or phone number already exists",
+        },
+        { status: 409 }
+      );
+    }
+
+    const errorMessage = error instanceof Error ? error.message : "";
+    const databaseUnavailable =
+      errorMessage === "DATABASE_URL is not configured" ||
+      ["P1000", "P1001", "P1002", "P2021", "P2022"].includes(errorCode ?? "");
+
     return NextResponse.json(
       {
         success: false,
-        message: "Something went wrong during registration",
+        message: databaseUnavailable
+          ? "Registration is temporarily unavailable because the database is not configured or ready. Please contact support."
+          : "Something went wrong during registration",
       },
-      { status: 500 }
+      { status: databaseUnavailable ? 503 : 500 }
     );
   }
 }

@@ -31,7 +31,17 @@ Required variables:
 - `DATABASE_URL` for the PostgreSQL connection string
 - `JWT_SECRET` for signing auth tokens
 
-The app will fail fast if these values are missing.
+Server features that require these values will report a configuration error if they are missing. The production build does not need live database credentials.
+
+For Vercel, add both variables in **Project Settings → Environment Variables** for every environment where the app should run. `DATABASE_URL` must be the connection string for a reachable PostgreSQL database; the local URL in `.env.example` is only for local development. Set `JWT_SECRET` to a long, random secret and redeploy after changing variables.
+
+Before accepting registrations, deploy the Prisma migrations to that same database:
+
+```bash
+npx prisma migrate deploy
+```
+
+You can check database connectivity at `/api/test-db`. Never put database credentials in client-side variables such as `NEXT_PUBLIC_DATABASE_URL`.
 
 ## Learn More
 

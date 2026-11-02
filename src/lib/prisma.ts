@@ -2,25 +2,27 @@ import { PrismaPg } from "@prisma/adapter-pg";
 import { PrismaClient } from "@prisma/client";
 import { getRequiredServerEnv } from "@/lib/env";
 
-const connectionString = getRequiredServerEnv(
-  "DATABASE_URL",
-  "postgresql://postgres:postgres@localhost:5432/aponjan"
-);
-
-const adapter = new PrismaPg({
-  connectionString,
-});
-
 const globalForPrisma = globalThis as unknown as {
   prisma: PrismaClient | undefined;
 };
 
-export const prisma =
-  globalForPrisma.prisma ??
-  new PrismaClient({
-    adapter,
-  });
+function getPrismaClient(): PrismaClient {
+  if (!globalForPrisma.prisma) {
+    const adapter = new PrismaPg({
+      connectionString: getRequiredServerEnv("DATABASE_URL"),
+    });
 
-if (process.env.NODE_ENV !== "production") {
-  globalForPrisma.prisma = prisma;
+    globalForPrisma.prisma = new PrismaClient({ adapter });
+  }
+
+  return globalForPrisma.prisma;
 }
+
+export const prisma = new Proxy({} as PrismaClient, {
+  get(_target, property) {
+    const client = getPrismaClient();
+    const value = Reflect.get(client, property, client) as unknown;
+
+    return typeof value === "function" ? value.bind(client) : value;
+  },
+});
