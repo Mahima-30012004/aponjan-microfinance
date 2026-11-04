@@ -1,53 +1,41 @@
 import { prisma } from "@/lib/prisma";
-import { verifyToken } from "@/lib/auth";
+import { authorizeRoles } from "@/lib/authorize";
 import { NextResponse } from "next/server";
 
 export async function GET(request: Request) {
   try {
-    const authHeader = request.headers.get("authorization");
+    const authorization = await authorizeRoles(request, [
+      "ADMIN",
+      "LOAN_OFFICER",
+    ]);
 
-    if (!authHeader || !authHeader.startsWith("Bearer ")) {
-      return NextResponse.json(
-        {
-          success: false,
-          message: "Authentication token is required",
-        },
-        { status: 401 }
-      );
-    }
-
-    const token = authHeader.substring(7);
-    const authUser = verifyToken(token);
-
-    if (!authUser) {
-      return NextResponse.json(
-        {
-          success: false,
-          message: "Invalid or expired token",
-        },
-        { status: 401 }
-      );
-    }
-
-    if (
-      authUser.role !== "ADMIN" &&
-      authUser.role !== "LOAN_OFFICER"
-    ) {
-      return NextResponse.json(
-        {
-          success: false,
-          message: "Access denied",
-        },
-        { status: 403 }
-      );
+    if ("response" in authorization) {
+      return authorization.response;
     }
 
     const applications = await prisma.loanApplication.findMany({
-      include: {
-        customer: true,
-        loanProduct: true,
-        group: true,
-        loan: true,
+      select: {
+        id: true,
+        requestedAmount: true,
+        requestedTenure: true,
+        status: true,
+        createdAt: true,
+        customer: {
+          select: {
+            fullName: true,
+          },
+        },
+        loanProduct: {
+          select: {
+            name: true,
+            loanType: true,
+          },
+        },
+        group: {
+          select: {
+            name: true,
+          },
+        },
       },
       orderBy: {
         createdAt: "desc",
@@ -57,6 +45,7 @@ export async function GET(request: Request) {
     return NextResponse.json({
       success: true,
       applications,
+      viewerRole: authorization.user.role,
     });
   } catch (error) {
     console.error("Admin applications error:", error);

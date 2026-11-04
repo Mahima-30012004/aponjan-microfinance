@@ -41,7 +41,11 @@ export default function LoginPage() {
         localStorage.setItem("adminToken", data.token);
       }
 
-      router.push(data.user.role === "ADMIN" ? "/admin/applications" : "/dashboard");
+      router.push(
+        data.user.role === "ADMIN" || data.user.role === "LOAN_OFFICER"
+          ? "/admin/applications"
+          : "/dashboard"
+      );
     } catch (error) {
       console.error(error);
       setMessage("Something went wrong. Please try again.");

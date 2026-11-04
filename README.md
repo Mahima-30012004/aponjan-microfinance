@@ -43,6 +43,18 @@ npx prisma migrate deploy
 
 You can check database connectivity at `/api/test-db`. Never put database credentials in client-side variables such as `NEXT_PUBLIC_DATABASE_URL`.
 
+## Provision staff and group leaders
+
+1. Copy `.env.example` to `.env` and set `DATABASE_URL` to the target PostgreSQL database, plus a unique `INITIAL_ADMIN_EMAIL` and strong `INITIAL_ADMIN_PASSWORD` (at least 12 characters). The bootstrap script also reads `INITIAL_ADMIN_NAME` and optional `INITIAL_ADMIN_PHONE`.
+2. Deploy the schema to that database with `npx prisma migrate deploy`.
+3. Run `npm run bootstrap:admin` once. It creates an admin only if the database has no admin. It never resets or replaces an existing administrator. Do not expose this script through a public API.
+4. Sign in as the admin and open **Manage Staff and Groups** from the loan applications page. Create loan officer accounts there; share their initial password securely and out of band.
+5. People who will lead groups must first register as customers. The admin can then create a group, select its leader, and add registered customers as members. Group creation promotes the selected customer to `TEAM_LEADER`.
+
+The admin management APIs are restricted to active administrators. Loan officers can view the application queue but cannot approve or reject applications.
+
+To configure the approved Individual Loan product (₹5,000–₹1,00,000, 30% flat interest, fixed 26 weeks), set `DATABASE_URL` to the target database and run `npm run setup:individual-product`. The command is safe to repeat and refuses to overwrite an existing product with different terms. Run it against the same database used by Vercel.
+
 ## Learn More
 
 To learn more about Next.js, take a look at the following resources:

@@ -11,6 +11,9 @@ export default function ApplyLoanPage() {
   });
 
   const [message, setMessage] = useState("");
+  const [messageType, setMessageType] = useState<"success" | "error">(
+    "success"
+  );
   const [loading, setLoading] = useState(false);
 
  const handleSubmit = async (e: FormEvent) => {
@@ -18,12 +21,14 @@ export default function ApplyLoanPage() {
 
   setLoading(true);
   setMessage("");
+  setMessageType("success");
 
   try {
     const token = localStorage.getItem("token");
 
     if (!token) {
       setMessage("Please login first.");
+      setMessageType("error");
       return;
     }
 
@@ -45,6 +50,7 @@ export default function ApplyLoanPage() {
 
     if (!response.ok) {
       setMessage(data.message || "Loan application failed.");
+      setMessageType("error");
       return;
     }
 
@@ -61,6 +67,7 @@ export default function ApplyLoanPage() {
   } catch (error) {
     console.error(error);
     setMessage("Something went wrong. Please try again.");
+    setMessageType("error");
   } finally {
     setLoading(false);
   }
@@ -169,7 +176,14 @@ export default function ApplyLoanPage() {
         </form>
 
         {message && (
-          <p className="mt-5 rounded-lg bg-green-50 p-4 text-sm text-green-700">
+          <p
+            role={messageType === "error" ? "alert" : "status"}
+            className={`mt-5 rounded-lg p-4 text-sm ${
+              messageType === "error"
+                ? "bg-red-50 text-red-700"
+                : "bg-green-50 text-green-700"
+            }`}
+          >
             {message}
           </p>
         )}

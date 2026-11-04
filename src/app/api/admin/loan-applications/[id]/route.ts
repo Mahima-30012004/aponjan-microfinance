@@ -1,5 +1,5 @@
 import { prisma } from "@/lib/prisma";
-import { verifyToken } from "@/lib/auth";
+import { authorizeRoles } from "@/lib/authorize";
 import { NextResponse } from "next/server";
 import { calculateFlatInterestLoan } from "@/lib/loan-calculator";
 
@@ -8,33 +8,10 @@ export async function PATCH(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const authHeader = request.headers.get("authorization");
+    const authorization = await authorizeRoles(request, ["ADMIN"]);
 
-    if (!authHeader || !authHeader.startsWith("Bearer ")) {
-      return NextResponse.json(
-        { success: false, message: "Authentication token is required" },
-        { status: 401 }
-      );
-    }
-
-    const token = authHeader.substring(7);
-    const authUser = verifyToken(token);
-
-    if (!authUser) {
-      return NextResponse.json(
-        { success: false, message: "Invalid or expired token" },
-        { status: 401 }
-      );
-    }
-
-    if (authUser.role !== "ADMIN") {
-      return NextResponse.json(
-        {
-          success: false,
-          message: "Only Admin can approve or reject applications",
-        },
-        { status: 403 }
-      );
+    if ("response" in authorization) {
+      return authorization.response;
     }
 
     const { id } = await params;
@@ -89,7 +66,7 @@ export async function PATCH(
         data: {
           status: "REJECTED",
           remarks: remarks || null,
-          reviewedById: authUser.userId,
+          reviewedById: authorization.user.userId,
           reviewedAt: new Date(),
         },
       });
@@ -142,7 +119,7 @@ export async function PATCH(
         data: {
           status: "APPROVED",
           remarks: remarks || null,
-          reviewedById: authUser.userId,
+          reviewedById: authorization.user.userId,
           reviewedAt: new Date(),
         },
       });
